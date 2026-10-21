@@ -6,7 +6,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/jpeg"
+	"image/png"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,8 +21,8 @@ import (
 )
 
 var (
-	width   = flag.Int("W", 256, "image width in pixels")
-	height  = flag.Int("H", 256, "image height in pixels")
+	width   = flag.Int("W", 256, "image width in pixels (sizes sent to the server must be multiples of 64 and are rounded up; the smaller generation dimension is at least 256px)")
+	height  = flag.Int("H", 256, "image height in pixels (sizes sent to the server must be multiples of 64 and are rounded up; the smaller generation dimension is at least 256px)")
 	prompt  = flag.String("p", "", "prompt")
 	neg     = flag.String("n", "", "negative prompt")
 	batch   = flag.Int("batch", 1, "number of images to generate (n)")
@@ -25,6 +31,12 @@ var (
 	out     = flag.String("o", "", "output file path (default: generated/img_<timestamp>.png)")
 	server  = flag.String("server", "127.0.0.1:8080", "stable-diffusion.cpp server host:port")
 	timeout = flag.Duration("timeout", 10*time.Minute, "request timeout")
+)
+
+const (
+	minGenDimension = 256
+	sizeStep        = 64
+	lanczosA        = 3
 )
 
 type imageRequest struct {
@@ -84,6 +96,148 @@ func withIndex(p string, i int) string {
 		return filepath.Join(dir, base+fmt.Sprintf("_%d", i+1))
 	}
 	return filepath.Join(dir, base[:dot]+fmt.Sprintf("_%d", i+1)+base[dot:])
+}
+
+func ceilToStep(v, step int) int {
+	if v%step == 0 {
+		return v
+	}
+	return (v/step + 1) * step
+}
+
+func generationSize(w, h int) (genW, genH int, changed bool) {
+	origW, origH := w, h
+	if w < minGenDimension || h < minGenDimension {
+		scale := math.Max(
+			float64(minGenDimension)/float64(w),
+			float64(minGenDimension)/float64(h),
+		)
+		w = int(math.Ceil(float64(w) * scale))
+		h = int(math.Ceil(float64(h) * scale))
+	}
+	genW, genH = ceilToStep(w, sizeStep), ceilToStep(h, sizeStep)
+	changed = genW != origW || genH != origH
+	return genW, genH, changed
+}
+
+func decodeImage(data []byte) (image.Image, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
+	return img, err
+}
+
+func encodeImage(img image.Image, format string, quality int) ([]byte, string, error) {
+	var buf bytes.Buffer
+	if format == "jpeg" {
+		b := img.Bounds()
+		dst := image.NewRGBA(b)
+		draw.Draw(dst, b, image.NewUniform(color.White), image.Point{}, draw.Over)
+		draw.Draw(dst, b, img, b.Min, draw.Over)
+		if err := jpeg.Encode(&buf, dst, &jpeg.Options{Quality: quality}); err != nil {
+			return nil, "", err
+		}
+		return buf.Bytes(), "image/jpeg", nil
+	}
+	if err := png.Encode(&buf, img); err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), "image/png", nil
+}
+
+func sinc(x float64) float64 {
+	if x == 0 {
+		return 1
+	}
+	px := math.Pi * x
+	return math.Sin(px) / px
+}
+
+func lanczos(t float64) float64 {
+	if math.Abs(t) >= lanczosA {
+		return 0
+	}
+	return sinc(t) * sinc(t/lanczosA)
+}
+
+type sampleWeight struct {
+	index  int
+	weight float64
+}
+
+func sampleWeights(center float64, size int) []sampleWeight {
+	var out []sampleWeight
+	lo := int(math.Ceil(center - float64(lanczosA)))
+	hi := int(math.Floor(center + float64(lanczosA)))
+	for i := lo; i <= hi; i++ {
+		if i < 0 || i >= size {
+			continue
+		}
+		w := lanczos(float64(i) - center)
+		if w != 0 {
+			out = append(out, sampleWeight{i, w})
+		}
+	}
+	return out
+}
+
+func clampByte(v float64) uint8 {
+	if v <= 0 {
+		return 0
+	}
+	if v >= 255 {
+		return 255
+	}
+	return uint8(v + 0.5)
+}
+
+func resizeLanczos(src image.Image, dw, dh int) *image.NRGBA {
+	sb := src.Bounds()
+	sw, sh := sb.Dx(), sb.Dy()
+	s := make([]color.NRGBA, sw*sh)
+	for y := 0; y < sh; y++ {
+		for x := 0; x < sw; x++ {
+			r, g, b, a := src.At(sb.Min.X+x, sb.Min.Y+y).RGBA()
+			s[y*sw+x] = color.NRGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)}
+		}
+	}
+	xwAll := make([][]sampleWeight, dw)
+	for dx := 0; dx < dw; dx++ {
+		cx := (float64(dx) + 0.5) * float64(sw) / float64(dw)
+		xwAll[dx] = sampleWeights(cx, sw)
+	}
+	dst := image.NewNRGBA(image.Rect(0, 0, dw, dh))
+	for dy := 0; dy < dh; dy++ {
+		cy := (float64(dy) + 0.5) * float64(sh) / float64(dh)
+		yw := sampleWeights(cy, sh)
+		for dx := 0; dx < dw; dx++ {
+			var r, g, b, a, total float64
+			for _, wy := range yw {
+				row := wy.index * sw
+				for _, wx := range xwAll[dx] {
+					w := wy.weight * wx.weight
+					p := s[row+wx.index]
+					pa := float64(p.A)
+					r += w * float64(p.R) * pa / 255
+					g += w * float64(p.G) * pa / 255
+					b += w * float64(p.B) * pa / 255
+					a += w * pa
+					total += w
+				}
+			}
+			if total > 0 {
+				r /= total
+				g /= total
+				b /= total
+				a /= total
+			}
+			dst.SetNRGBA(dx, dy, color.NRGBA{
+				R: clampByte(r),
+				G: clampByte(g),
+				B: clampByte(b),
+				A: clampByte(a),
+			})
+		}
+	}
+	return dst
 }
 
 func decodeEntry(e imageEntry, client *http.Client) ([]byte, string, error) {
@@ -178,10 +332,12 @@ func main() {
 		fatalf("-quality must be in 0-100")
 	}
 
+	genW, genH, sizeChanged := generationSize(*width, *height)
+
 	body, err := json.Marshal(imageRequest{
 		Prompt:            *prompt,
 		NegativePrompt:    *neg,
-		Size:              fmt.Sprintf("%dx%d", *width, *height),
+		Size:              fmt.Sprintf("%dx%d", genW, genH),
 		N:                 *batch,
 		OutputFormat:      *format,
 		OutputCompression: *quality,
@@ -214,6 +370,11 @@ func main() {
 		fatalf("no images in response")
 	}
 
+	if sizeChanged {
+		fmt.Printf("note: requested size %dx%d, generated at %dx%d, saving at %dx%d\n",
+			*width, *height, genW, genH, *width, *height)
+	}
+
 	for i, e := range ir.Data {
 		img, declared, err := decodeEntry(e, client)
 		if err != nil {
@@ -225,6 +386,19 @@ func main() {
 		}
 		if mime == "" {
 			mime = "image/png"
+		}
+		if decoded, derr := decodeImage(img); derr != nil {
+			if sizeChanged {
+				fmt.Fprintf(os.Stderr, "warning: cannot decode image for resize: %v (saving as-is)\n", derr)
+			}
+		} else if b := decoded.Bounds(); b.Dx() != *width || b.Dy() != *height {
+			resized := resizeLanczos(decoded, *width, *height)
+			data, newMime, eerr := encodeImage(resized, *format, *quality)
+			if eerr != nil {
+				fatalf("re-encode image: %v", eerr)
+			}
+			img = data
+			mime = newMime
 		}
 		outPath := *out
 		if len(ir.Data) > 1 && outPath != "" {
