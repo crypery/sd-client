@@ -68,6 +68,15 @@ sd-client.exe -p "three variants of a logo with text \"Alpha\"" -W 512 -H 512 -b
 Чтобы сгенерировать картинку, выполни:
 sd-client.exe -p "<detailed prompt in English>" -W <width> -H <height> [-n "<negative>"] [-o <path>] [-batch N] [-format png|jpeg]
 В stdout придёт путь к файлу — покажи его пользователю.
-Размеры: 256/512/1024, кратные 8. Промпт для картинки — на английском, детально.
+Промпт для картинки — на английском, детально.
 Ошибка "connection refused" = сервер sd-server не запущен на 127.0.0.1:8080.
+```
+
+
+```
+To generate an image, run:
+sd-client.exe -p "<detailed prompt in English>" -W <width> -H <height> [-n "<negative>"] [-o <path>] [-batch N] [-format png|jpeg]
+- The prompt must be in English and detailed.
+- The file path to the generated image is printed to stdout — show it to the user.
+- If the error "connection refused" appears, the sd-server is not running on 127.0.0.1:8080.
 ```
