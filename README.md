@@ -1,5 +1,9 @@
 # sd-client
 
+> [Russian version](README_RU.md)
+
+> [China version](README_CN.md)
+
 A minimal Go CLI client for the [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) server.
 
 It sends a text-to-image request to the OpenAI-compatible `POST /v1/images/generations` endpoint and saves the generated image locally as PNG or JPEG — handy for scripts and AI agents that need to generate images on the fly.

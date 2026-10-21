@@ -1,5 +1,9 @@
 # sd-client
 
+> [English version](README.md)
+
+> [Russian version](README_RU.md)
+
 一个用于 [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) 服务端的极简 Go 命令行客户端。
 
 它向 OpenAI 兼容的 `POST /v1/images/generations` 接口发送文生图请求，并将生成的图片以 PNG 或 JPEG 格式保存到本地——非常适合需要即时生成图片的脚本和 AI 代理。
