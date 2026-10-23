@@ -10,7 +10,7 @@
 
 ## 工作原理
 
-1. 构造 JSON 请求：`prompt`、`negative_prompt`、`size`（`WxH`）、`n`、`output_format`、`output_compression`。
+1. 构造 JSON 请求：`prompt`、`negative_prompt`、`size`（`WxH`）、`n`、`seed`、`output_format`、`output_compression`。
 2. 以 `Content-Type: application/json` POST 到 `http://<server>/v1/images/generations`。
 3. 解析响应（base64 data URL、`b64_json` 或普通图片 URL）。
 4. 将图片保存到磁盘，并把文件路径打印到 stdout。
@@ -45,6 +45,7 @@ sd-server --listen-ip 127.0.0.1 --listen-port 8080 --seed -1 ^
 | `-W` | `size` | 图片宽度（像素） | 256 |
 | `-H` | `size` | 图片高度（像素） | 256 |
 | `-batch` | `n` | 生成图片数量 | 1 |
+| `-seed` | `seed` | 生成随机种子（-1 = 随机） | -1 |
 | `-format` | `output_format` | 输出格式：`png` 或 `jpeg` | png |
 | `-quality` | `output_compression` | 压缩质量，0–100 | 100 |
 | `-o` | — | 输出文件路径；不带扩展名时自动补充 | `generated/img_<时间戳>.png` |

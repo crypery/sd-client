@@ -10,7 +10,7 @@
 
 ## Как это работает
 
-1. Формирует JSON-запрос: `prompt`, `negative_prompt`, `size` (`WxH`), `n`, `output_format`, `output_compression`.
+1. Формирует JSON-запрос: `prompt`, `negative_prompt`, `size` (`WxH`), `n`, `seed`, `output_format`, `output_compression`.
 2. Делает POST на `http://<server>/v1/images/generations` с `Content-Type: application/json`.
 3. Расшифровывает ответ (base64 data URL, `b64_json` или обычная URL картинки).
 4. Сохраняет картинку на диск и выводит путь к файлу в stdout.
@@ -45,6 +45,7 @@ sd-server --listen-ip 127.0.0.1 --listen-port 8080 --seed -1 ^
 | `-W` | `size` | Ширина картинки, px | 256 |
 | `-H` | `size` | Высота картинки, px | 256 |
 | `-batch` | `n` | Количество картинок | 1 |
+| `-seed` | `seed` | Сид генерации (-1 = случайный) | -1 |
 | `-format` | `output_format` | Формат: `png` или `jpeg` | png |
 | `-quality` | `output_compression` | Компрессия, 0–100 | 100 |
 | `-o` | — | Путь к файлу результата; расширение добавится, если не указано | `generated/img_<timestamp>.png` |

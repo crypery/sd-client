@@ -26,6 +26,7 @@ var (
 	prompt  = flag.String("p", "", "prompt")
 	neg     = flag.String("n", "", "negative prompt")
 	batch   = flag.Int("batch", 1, "number of images to generate (n)")
+	seed    = flag.Int("seed", -1, "generation seed (-1 = random)")
 	format  = flag.String("format", "png", "output format: png or jpeg")
 	quality = flag.Int("quality", 100, "output compression, 0-100")
 	out     = flag.String("o", "", "output file path (default: generated/img_<timestamp>.png)")
@@ -44,6 +45,7 @@ type imageRequest struct {
 	NegativePrompt    string `json:"negative_prompt,omitempty"`
 	Size              string `json:"size"`
 	N                 int    `json:"n"`
+	Seed              int    `json:"seed"`
 	OutputFormat      string `json:"output_format"`
 	OutputCompression int    `json:"output_compression"`
 }
@@ -339,6 +341,7 @@ func main() {
 		NegativePrompt:    *neg,
 		Size:              fmt.Sprintf("%dx%d", genW, genH),
 		N:                 *batch,
+		Seed:              *seed,
 		OutputFormat:      *format,
 		OutputCompression: *quality,
 	})

@@ -10,7 +10,7 @@ It sends a text-to-image request to the OpenAI-compatible `POST /v1/images/gener
 
 ## How it works
 
-1. Builds a JSON request: `prompt`, `negative_prompt`, `size` (`WxH`), `n`, `output_format`, `output_compression`.
+1. Builds a JSON request: `prompt`, `negative_prompt`, `size` (`WxH`), `n`, `seed`, `output_format`, `output_compression`.
 2. POSTs it to `http://<server>/v1/images/generations` with `Content-Type: application/json`.
 3. Decodes the response (base64 data URL, `b64_json`, or a plain image URL).
 4. Saves the image to disk and prints the file path to stdout.
@@ -45,6 +45,7 @@ sd-server --listen-ip 127.0.0.1 --listen-port 8080 --seed -1 ^
 | `-W` | `size` | Image width in pixels | 256 |
 | `-H` | `size` | Image height in pixels | 256 |
 | `-batch` | `n` | Number of images to generate | 1 |
+| `-seed` | `seed` | Generation seed (-1 = random) | -1 |
 | `-format` | `output_format` | Output format: `png` or `jpeg` | png |
 | `-quality` | `output_compression` | Compression quality, 0–100 | 100 |
 | `-o` | — | Output file path; an extension is appended if missing | `generated/img_<timestamp>.png` |
