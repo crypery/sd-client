@@ -29,7 +29,7 @@ var (
 	seed    = flag.Int("seed", -1, "generation seed (-1 = random)")
 	format  = flag.String("format", "png", "output format: png or jpeg")
 	quality = flag.Int("quality", 100, "output compression, 0-100")
-	out     = flag.String("o", "", "output file path (default: generated/img_<timestamp>.png)")
+	out     = flag.String("o", "", "output file path (default: img_<timestamp>.png)")
 	server  = flag.String("server", "127.0.0.1:8080", "stable-diffusion.cpp server host:port")
 	timeout = flag.Duration("timeout", 10*time.Minute, "request timeout")
 )
@@ -289,7 +289,7 @@ func decodeEntry(e imageEntry, client *http.Client) ([]byte, string, error) {
 
 func saveImage(data []byte, out, mime string, seq, total int) (string, error) {
 	if out == "" {
-		dir := "generated"
+		dir := ""
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return "", err
 		}
