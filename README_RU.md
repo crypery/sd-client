@@ -48,7 +48,7 @@ sd-server --listen-ip 127.0.0.1 --listen-port 8080 --seed -1 ^
 | `-seed` | `seed` | Сид генерации (-1 = случайный) | -1 |
 | `-format` | `output_format` | Формат: `png` или `jpeg` | png |
 | `-quality` | `output_compression` | Компрессия, 0–100 | 100 |
-| `-o` | — | Путь к файлу результата; расширение добавится, если не указано | `generated/img_<timestamp>.png` |
+| `-o` | — | Путь к файлу результата; расширение добавится, если не указано | `img_<timestamp>.png` |
 | `-server` | — | Адрес сервера `host:port` | 127.0.0.1:8080 |
 | `-timeout` | — | Таймаут запроса (Go duration: `30s`, `5m`, …) | 10m |
 

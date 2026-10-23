@@ -48,7 +48,7 @@ sd-server --listen-ip 127.0.0.1 --listen-port 8080 --seed -1 ^
 | `-seed` | `seed` | 生成随机种子（-1 = 随机） | -1 |
 | `-format` | `output_format` | 输出格式：`png` 或 `jpeg` | png |
 | `-quality` | `output_compression` | 压缩质量，0–100 | 100 |
-| `-o` | — | 输出文件路径；不带扩展名时自动补充 | `generated/img_<时间戳>.png` |
+| `-o` | — | 输出文件路径；不带扩展名时自动补充 | `img_<时间戳>.png` |
 | `-server` | — | 服务端地址 `host:port` | 127.0.0.1:8080 |
 | `-timeout` | — | 请求超时（Go duration：`30s`、`5m`…） | 10m |
 
@@ -70,5 +70,5 @@ sd-client.exe -p "a rabbit" -server 192.168.0.10:8080 -timeout 30m
 ## 输出说明
 
 - 成功后把保存的文件路径打印到 stdout（`-batch > 1` 时每张图片一行）。
-- 未指定 `-o` 时，图片保存到 `generated/img_<YYYYMMDD_HHMMSS>.png`（批量生成时带 `_1`、`_2`… 后缀）。
+- 未指定 `-o` 时，图片保存到 `img_<YYYYMMDD_HHMMSS>.png`（批量生成时带 `_1`、`_2`… 后缀）。
 - 成功退出码为 `0`，出错为 `1`（错误信息输出到 stderr）。

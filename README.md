@@ -48,7 +48,7 @@ sd-server --listen-ip 127.0.0.1 --listen-port 8080 --seed -1 ^
 | `-seed` | `seed` | Generation seed (-1 = random) | -1 |
 | `-format` | `output_format` | Output format: `png` or `jpeg` | png |
 | `-quality` | `output_compression` | Compression quality, 0–100 | 100 |
-| `-o` | — | Output file path; an extension is appended if missing | `generated/img_<timestamp>.png` |
+| `-o` | — | Output file path; an extension is appended if missing | `img_<timestamp>.png` |
 | `-server` | — | Server address `host:port` | 127.0.0.1:8080 |
 | `-timeout` | — | Request timeout (Go duration: `30s`, `5m`, …) | 10m |
 
@@ -70,5 +70,5 @@ sd-client.exe -p "a rabbit" -server 192.168.0.10:8080 -timeout 30m
 ## Output
 
 - The saved file path is printed to stdout (one line per image when `-batch > 1`).
-- Without `-o`, images go to `generated/img_<YYYYMMDD_HHMMSS>.png` (`_1`, `_2`, … suffixes for batches).
+- Without `-o`, images go to `img_<YYYYMMDD_HHMMSS>.png` (`_1`, `_2`, … suffixes for batches).
 - Exit code `0` on success, `1` on any error (error message goes to stderr).
