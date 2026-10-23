@@ -1,1 +1,1 @@
-sd-client.exe -W 512 -H 512 -p "cyberpunk city" -n "blurry, low quality" -o city.jpg -format jpeg
+sd-client -W 512 -H 512 -p "cyberpunk city" -n "blurry, low quality" -o city.jpg -format jpeg

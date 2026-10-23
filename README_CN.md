@@ -61,11 +61,15 @@ sd-client.exe -W 256 -H 256 -p "a cat on a roof" -n "blurry, low quality"
 更多示例：
 
 ```
-sd-client.exe -p "cyberpunk city" -W 512 -H 512 -o city.jpg
+sd-client -W 512 -H 512 -p "cyberpunk city" -n "blurry, low quality" -o city.jpg -format jpeg
 sd-client.exe -p "watercolor fox" -batch 4
 sd-client.exe -p "oil painting of a boat" -format jpeg -quality 80 -o boat
 sd-client.exe -p "a rabbit" -server 192.168.0.10:8080 -timeout 30m
 ```
+
+第一个示例生成 `city.jpg`：
+
+![cyberpunk city](city.jpg)
 
 ## 输出说明
 
